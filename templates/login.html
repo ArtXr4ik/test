@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1><i class="fab fa-telegram"></i> Telegram Accounts</h1>
+            <p>Войдите в свой аккаунт</p>
+        </div>
+
+        <form method="POST" class="auth-form">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required 
+                       placeholder="your@email.com" value="{{ request.form.email }}">
+                <i class="fas fa-envelope input-icon"></i>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" required 
+                       placeholder="Введите пароль">
+                <i class="fas fa-lock input-icon"></i>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-large">
+                <i class="fas fa-sign-in-alt"></i> Войти
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Нет аккаунта? <a href="{{ url_for('register') }}">Зарегистрируйтесь</a></p>
+            <p class="auth-note">Любые email и пароль подходят для демонстрации</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header>
+    <h1>Telegram Аккаунты</h1>
+    <div class="user-info">
+        <span>Добро пожаловать, {{ session.email }}</span>
+        <div class="header-buttons">
+            <a href="{{ url_for('profile') }}" class="btn-profile">Профиль</a>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Выйти</a>
+        </div>
+    </div>
+</header>
+
+<main>
+    <!-- Поиск -->
+    <div class="search-container">
+        <form method="GET" action="{{ url_for('index') }}" class="search-form">
+            <input type="text" name="search" placeholder="Поиск товаров..." value="{{ search_query }}" 
+                   class="search-input">
+            <button type="submit" class="search-btn">Найти</button>
+            {% if search_query %}
+            <a href="{{ url_for('index') }}" class="clear-search">Очистить</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Товары -->
+    <div class="products-grid">
+        {% for product in products %}
+        <div class="product-card {% if not product.available %}unavailable{% endif %}" 
+             data-product-id="{{ product.id }}">
+            <h3>{{ product.name }}</h3>
+            <div class="price-container">
+                {% if product.sale %}
+                <span class="original-price">{{ product.original_price }}</span>
+                <span class="sale-badge">{{ product.sale }}</span>
+                {% endif %}
+                <span class="price">{{ product.price }}</span>
+            </div>
+            <div class="product-views">
+                👁️ Просмотров: <span class="views-count">{{ product.views }}</span>
+            </div>
+            <a href="https://t.me/Followhqq" class="btn-buy {% if not product.available %}disabled{% endif %}" 
+               target="_blank" {% if not product.available %}onclick="return false;"{% endif %}>
+                {% if product.available %}Купить в Telegram{% else %}Нет в наличии{% endif %}
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if not products %}
+    <div class="no-products">
+        <p>Товары не найдены. Попробуйте изменить поисковый запрос.</p>
+    </div>
+    {% endif %}
+    
+    <div class="update-notice">
+        <p>⚠️ В будущем будут обновления товаров ⚠️</p>
+        <p>⚠️ В будущем планируется продажа прокси!!! ⚠️</p>
+    </div>
+
+    <!-- Система отзывов -->
+    <section class="reviews-section">
+        <h2>Отзывы покупателей</h2>
+        
+        <!-- Форма добавления отзыва -->
+        {% if current_user.is_authenticated %}
+        <div class="add-review-form">
+            <h3>Оставить отзыв</h3>
+            <form id="reviewForm">
+                <div class="form-group">
+                    <select name="product_name" required class="review-select">
+                        <option value="">Выберите товар</option>
+                        <option value="Аккаунт Telegram Мьянма(+95)">Аккаунт Telegram Мьянма(+95)</option>
+                        <option value="Аккаунт Telegram Бангладеш(+880)">Аккаунт Telegram Бангладеш(+880)</option>
+                        <option value="Аккаунт Telegram США(вирт)(+1)">Аккаунт Telegram США(вирт)(+1)</option>
+                        <option value="Аккаунт Telegram Нигерия(+234)">Аккаунт Telegram Нигерия(+234)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="rating-stars">
+                        <span>Оценка:</span>
+                        {% for i in range(5, 0, -1) %}
+                        <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}">
+                        <label for="star{{ i }}">★</label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <textarea name="content" placeholder="Ваш отзыв..." required 
+                              maxlength="500" class="review-textarea"></textarea>
+                </div>
+                <button type="submit" class="btn-submit-review">Отправить отзыв</button>
+            </form>
+        </div>
+        {% else %}
+        <p class="auth-required">Чтобы оставить отзыв, <a href="{{ url_for('login') }}">войдите</a> в аккаунт</p>
+        {% endif %}
+
+        <!-- Список отзывов -->
+        <div class="reviews-list">
+            {% if reviews %}
+                {% for review in reviews %}
+                <div class="review-item">
+                    <div class="review-header">
+                        <strong>{{ review.author.email }}</strong>
+                        <span class="review-product">{{ review.product_name }}</span>
+                        <div class="review-rating">
+                            {% for i in range(5) %}
+                            <span class="star {% if i < review.rating %}filled{% endif %}">★</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="review-content">{{ review.content }}</p>
+                    <div class="review-footer">
+                        <span class="review-date">{{ review.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="no-reviews">Пока нет отзывов. Будьте первым!</p>
+            {% endif %}
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>По всем багам, ошибкам, непоняткам, возврату товара писать в телеграм <a href="https://t.me/Xr4kqq" target="_blank">@Xr4kqq</a></p>
+</footer>
+{% endblock %}

@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Магазин Telegram Аккаунтов{% endblock %}
+
+{% block content %}
+<header class="dashboard-header">
+    <div class="header-content">
+        <div class="logo">
+            <i class="fab fa-telegram"></i>
+            <h1>Telegram Accounts Shop</h1>
+        </div>
+        
+        <div class="user-menu">
+            <span class="user-greeting">Привет, {{ current_user.email }}</span>
+            <div class="user-dropdown">
+                <button class="user-btn">
+                    <i class="fas fa-user"></i>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt"></i> Выйти
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="dashboard-main">
+    <!-- Поиск и сортировка -->
+    <div class="controls-section">
+        <form method="GET" class="search-form">
+            <div class="search-box">
+                <input type="text" name="search" placeholder="Поиск аккаунтов..." 
+                       value="{{ search_query }}" class="search-input">
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+                {% if search_query %}
+                <a href="{{ url_for('dashboard') }}" class="clear-search">
+                    <i class="fas fa-times"></i>
+                </a>
+                {% endif %}
+            </div>
+            
+            <select name="sort" onchange="this.form.submit()" class="sort-select">
+                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>По названию</option>
+                <option value="price" {% if sort_by == 'price' %}selected{% endif %}>По цене</option>
+            </select>
+        </form>
+    </div>
+
+    <!-- Статистика -->
+    <div class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-eye"></i>
+                <h3>{{ products|sum(attribute='views') }}</h3>
+                <p>Всего просмотров</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-shopping-cart"></i>
+                <h3>{{ products|length }}</h3>
+                <p>Доступно товаров</p>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-star"></i>
+                <h3>4.8</h3>
+                <p>Средний рейтинг</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Товары -->
+    <section class="products-section">
+        <h2>Доступные аккаунты</h2>
+        
+        {% if not products %}
+        <div class="no-products">
+            <i class="fas fa-search"></i>
+            <h3>Товары не найдены</h3>
+            <p>Попробуйте изменить поисковый запрос</p>
+        </div>
+        {% endif %}
+
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card" data-product-id="{{ product.id }}">
+                <div class="product-header">
+                    {% if product.sale %}
+                    <span class="sale-badge">-{{ product.sale }}</span>
+                    {% endif %}
+                    <span class="views-badge">
+                        <i class="fas fa-eye"></i> {{ product.views }}
+                    </span>
+                </div>
+
+                <div class="product-body">
+                    <h3>{{ product.name }}</h3>
+                    <p class="product-desc">{{ product.description }}</p>
+                    
+                    <div class="product-price">
+                        {% if product.original_price %}
+                        <span class="old-price">{{ product.original_price }}</span>
+                        {% endif %}
+                        <span class="current-price">{{ product.price }}</span>
+                    </div>
+                </div>
+
+                <div class="product-footer">
+                    {% if product.available %}
+                    <a href="https://t.me/Followhqq" class="btn btn-buy" target="_blank">
+                        <i class="fab fa-telegram"></i> Купить в Telegram
+                    </a>
+                    {% else %}
+                    <button class="btn btn-disabled" disabled>
+                        <i class="fas fa-clock"></i> Нет в наличии
+                    </button>
+                    {% endif %}
+                    
+                    <button class="btn-review" onclick="showReviewModal({{ product.id }}, '{{ product.name }}')">
+                        <i class="fas fa-star"></i> Отзыв
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Отзывы -->
+    <section class="reviews-section">
+        <div class="section-header">
+            <h2>Последние отзывы</h2>
+            <button class="btn btn-outline" onclick="showReviewModal()">
+                <i class="fas fa-plus"></i> Написать отзыв
+            </button>
+        </div>
+
+        <div class="reviews-grid">
+            {% if reviews %}
+                {% for review in reviews %}
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <span class="reviewer-email">{{ review.user.email }}</span>
+                            <span class="review-product">
+                                {% set product = PRODUCTS|selectattr('id', 'equalto', review.product_id)|first %}
+                                {{ product.name if product else 'Товар' }}
+                            </span>
+                        </div>
+                        <div class="review-rating">
+                            {% for i in range(5) %}
+                            <span class="star {% if i < review.rating %}filled{% endif %}">★</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <p class="review-content">{{ review.content }}</p>
+                    
+                    <div class="review-footer">
+                        <span class="review-date">{{ review.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-reviews">
+                    <i class="fas fa-comment"></i>
+                    <p>Пока нет отзывов. Будьте первым!</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+</main>
+
+<!-- Модальное окно отзыва -->
+<div id="reviewModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Оставить отзыв</h3>
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+        </div>
+        
+        <form id="reviewForm" class="modal-form">
+            <input type="hidden" id="reviewProductId" name="product_id">
+            
+            <div class="form-group">
+                <label>Товар:</label>
+                <span id="reviewProductName">Выберите товар</span>
+            </div>
+            
+            <div class="form-group">
+                <label>Оценка:</label>
+                <div class="rating-input">
+                    {% for i in range(5, 0, -1) %}
+                    <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}">
+                    <label for="star{{ i }}" class="star-label">★</label>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="reviewContent">Отзыв:</label>
+                <textarea id="reviewContent" name="content" placeholder="Расскажите о вашем опыте..." 
+                         required minlength="10" maxlength="500"></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane"></i> Отправить отзыв
+            </button>
+        </form>
+    </div>
+</div>
+
+<footer class="dashboard-footer">
+    <p>По всем вопросам: <a href="https://t.me/Xr4kqq" target="_blank">@Xr4kqq</a></p>
+    <p>© 2024 Telegram Accounts Shop. Все права защищены.</p>
+</footer>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
